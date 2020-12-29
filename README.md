@@ -8,9 +8,15 @@
 
 - graphql code generator (looks at queries and generates typescript types) [docs](https://graphql-code-generator.com/)
 
+- URQL graphcache (cache endpoint data after a response is sent from Backend)
+
 # To connect an endpoint
 
 1. first test the query in the graphql playground
 2. copy and paste the query and paste it inside a new file inside the graphql folder.
 3. run $ yarn gen , which will create types for the query and a hook on the client side
 4. use the hook thats being exported to use the endpoint.
+
+# things to note
+
+### fragment folder is used for mutating our query types when there is alot of repitition

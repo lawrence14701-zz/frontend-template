@@ -1,6 +1,23 @@
 import { ChakraProvider } from "@chakra-ui/react";
-import { Provider, createClient } from "urql";
+import { Provider, createClient, dedupExchange, fetchExchange } from "urql";
+import { cacheExchange, Cache, QueryInput } from "@urql/exchange-graphcache";
 import theme from "../theme";
+import {
+  LoginMutation,
+  MeDocument,
+  MeQuery,
+  RegisterMutation,
+} from "../generated/graphql";
+
+// helper function to properly cast the types
+function betterUpdateQuery<Result, Query>(
+  cache: Cache,
+  qi: QueryInput,
+  result: any,
+  fn: (r: Result, q: Query) => Query
+) {
+  return cache.updateQuery(qi, (data) => fn(result, data as any) as any);
+}
 
 const client = createClient({
   url: "http://localhost:4000/graphql",
@@ -8,6 +25,53 @@ const client = createClient({
     //sends a cookie
     credentials: "include",
   },
+  exchanges: [
+    dedupExchange,
+    // [Docs for graph cache](https://formidable.com/open-source/urql/docs/graphcache/custom-updates/)
+    cacheExchange({
+      updates: {
+        Mutation: {
+          login: (_result, args, cache, info) => {
+            betterUpdateQuery<LoginMutation, MeQuery>(
+              cache,
+              {
+                query: MeDocument,
+              },
+              _result,
+              (result, query) => {
+                if (result.login.errors) {
+                  return query;
+                } else {
+                  return {
+                    me: result.login.user,
+                  };
+                }
+              }
+            );
+          },
+          register: (_result, args, cache, info) => {
+            betterUpdateQuery<RegisterMutation, MeQuery>(
+              cache,
+              {
+                query: MeDocument,
+              },
+              _result,
+              (result, query) => {
+                if (result.register.errors) {
+                  return query;
+                } else {
+                  return {
+                    me: result.register.user,
+                  };
+                }
+              }
+            );
+          },
+        },
+      },
+    }),
+    fetchExchange,
+  ],
 });
 
 function MyApp({ Component, pageProps }: any) {
