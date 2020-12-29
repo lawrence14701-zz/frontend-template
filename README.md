@@ -10,6 +10,8 @@
 
 - URQL graphcache (cache endpoint data after a response is sent from Backend)
 
+- URQL next.js [routing docs](https://formidable.com/open-source/urql/docs/advanced/server-side-rendering/)
+
 # To connect an endpoint
 
 1. first test the query in the graphql playground
